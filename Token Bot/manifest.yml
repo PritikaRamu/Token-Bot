@@ -1,0 +1,6 @@
+---
+applications:
+ - name: TokenSystem
+   command: python n_cloud_bot.py
+   no-route: true
+   memory: 128M
