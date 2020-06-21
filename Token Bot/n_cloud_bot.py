@@ -170,7 +170,7 @@ def list_all(chat_id):
     else:
         send_message(message[:-2],chat_id)
 
-def no_cancelled_tokens(max_shop_token_no):
+def num_cancelled_tokens(max_shop_token_no):
     count=0
     for cancelled_tokens in TOKENS_CANCEL:
         if(int(cancelled_tokens)>=max_shop_token_no-4 and int(cancelled_tokens)<=max_shop_token_no):
@@ -217,11 +217,21 @@ def inform_resident(token_counter, max_shop_token_no, last_token_id):
     #Message: Response not received for token number {}. Please type Done or Cancel
     reminder_message_str="Request the following token holders to enter DONE or CANCEL in @CCTMS_bot:\n"
     reminder_message_str=reminder_message(token_counter,reminder_message_str)
-    count=no_cancelled_tokens(max_shop_token_no)
+    count=num_cancelled_tokens(max_shop_token_no)
+    i=1
+    while (i<=count):
+        if((token_counter+10+i)<=last_token_id):
+            inform_next_resident(token_counter+10+i)
+        i+=1
     while(count==5):
         max_shop_token_no+=5
         token_counter+=5
-        count=no_cancelled_tokens(max_shop_token_no)
+        count=num_cancelled_tokens(max_shop_token_no)
+        i=1
+        while (i<=count):
+            if((token_counter+10+i)<=last_token_id):
+                inform_next_resident(token_counter+10+i)
+            i+=1
     if(max_shop_token_no>last_token_id):
         max_shop_token_no1=last_token_id
     else:
@@ -236,6 +246,16 @@ def inform_resident(token_counter, max_shop_token_no, last_token_id):
             send_message(reminder_message_str,RESIDENT_GROUP_ID)
     token_counter+=count
     return token_counter, max_shop_token_no
+
+def inform_next_resident(token_no):
+    int_collected=[]
+    int_cancelled=[]
+    for ele in TOKENS_COL:
+        int_collected.append(int(ele))
+    for ele in TOKENS_CANCEL:
+        int_cancelled.append(int(ele))
+    if (token_no not in int_collected and token_no not in int_cancelled):
+        send_message("Please go down for shopping. If you cannot go down, type CANCEL", get_chat_id(token_no))
 
 def issue_token(apt_no,chat_id,name,last_token_id):
     #Adding 19800 to convert from GMT to IST to help to get the correct date in India
@@ -425,10 +445,13 @@ def main():
                                     token_counter=token_counter_new
                                     if(token_counter==last_token_id):
                                         send_message("All tokens processed. Shopping open for all residents.",RESIDENT_GROUP_ID)
-                                    elif((token_counter%5==0) and (token_counter!=0)):
-                                        max_shop_token_no+=5
-                                        if (last_token_id>10):
-                                            token_counter, max_shop_token_no=inform_resident(token_counter, max_shop_token_no, last_token_id)
+                                    else:
+                                        if(token_counter+10<=last_token_id):
+                                            inform_next_resident(token_counter+10)
+                                        if((token_counter%5==0) and (token_counter!=0)):
+                                            max_shop_token_no+=5
+                                            if (last_token_id>10):
+                                                token_counter, max_shop_token_no=inform_resident(token_counter, max_shop_token_no, last_token_id)
                             elif(text=="/start"):
                                 send_message("Valid commands are:\n 1.Apt# (Request a Token e.g. D702)\n 2.Done (While in Billing line)\n 3.Cancel (If you have a token and wanting to go at the end or not wanting to shop)\n 4.List All\n 5.Status",chat)
                             elif((text.strip().upper().startswith('ISSUE') or text.strip().upper().startswith('/ISSUE')) and chat==ADMIN_ID):
@@ -444,13 +467,16 @@ def main():
                             elif(text.strip().upper()=='CANCEL'):
                                 token_counter_new=cancel_token(chat,token_counter,max_shop_token_no)
                                 if token_counter < token_counter_new:
-                                   token_counter=token_counter_new
-                                   if(token_counter==last_token_id):
-                                       send_message("All tokens processed. Shopping open for all residents.",RESIDENT_GROUP_ID)
-                                   elif((token_counter%5==0) and (token_counter!=0)):
-                                       max_shop_token_no+=5
-                                       if (last_token_id>10):
-                                           token_counter, max_shop_token_no=inform_resident(token_counter, max_shop_token_no, last_token_id)
+                                    token_counter=token_counter_new
+                                    if(token_counter==last_token_id):
+                                        send_message("All tokens processed. Shopping open for all residents.",RESIDENT_GROUP_ID)
+                                    else:
+                                        if(token_counter+10<=last_token_id):
+                                            inform_next_resident(token_counter+10)
+                                        if((token_counter%5==0) and (token_counter!=0)):
+                                            max_shop_token_no+=5
+                                            if (last_token_id>10):
+                                                token_counter, max_shop_token_no=inform_resident(token_counter, max_shop_token_no, last_token_id)
                             elif(type=="private"):
                                 last_token_id=issue_token(text.strip().upper(),chat,name,last_token_id)
                             else:
