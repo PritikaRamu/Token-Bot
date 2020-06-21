@@ -40,7 +40,7 @@ ADMIN_ID=-460125915 #TMS admin group
 #ADMIN_ID=928263370  Arvind YN
 #ADMIN_ID=1279557157
 RESIDENT_GROUP_ID=-1001432365387 #Century Owners and Residents Group ID
-#RESIDENT_GROUP_ID=1279557157 #Pritika's chat id
+PRITIKA_ID=1279557157 #Pritika's chat id
 
 def get_url(url):
     response = requests.get(url)
@@ -59,8 +59,8 @@ def get_updates(offset=None):
             url += "&offset={}".format(offset)
         js = get_json_from_url(url)
         return js
-    except Exception as e:
-        print(e)
+    except:
+        return {'ok': True, 'result': []}
 
 def get_last_update_id(updates):
     update_ids = []
