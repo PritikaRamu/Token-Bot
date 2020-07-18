@@ -68,7 +68,10 @@ def get_last_update_id(updates):
     if "result" in updates:
         for update in updates["result"]:
             update_ids.append(int(update["update_id"]))
-        return max(update_ids)
+        if(len(update_ids)>0):
+            return max(update_ids)
+        else:
+            return None
     else:
         return None
 
